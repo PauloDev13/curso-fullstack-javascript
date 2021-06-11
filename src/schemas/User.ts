@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 
 export interface UserInterface extends Document {
   name: string;
@@ -10,7 +10,6 @@ export interface UserInterface extends Document {
 const UserSchema = new Schema({
   name: {
     type: String,
-    unique: true,
     required: [true, 'Nome é obrigatório!'],
   },
   email: {

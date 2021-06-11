@@ -1,16 +1,19 @@
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import Controller from './controllers/Controller';
 
 class App {
   public app: express.Application;
 
-  public constructor() {
+  public constructor(controllers: Controller[]) {
     this.app = express();
     this.app.use(cors());
 
     this.initMongoose();
     this.connectDatabase();
+    this.initExpressJson();
+    this.initControllers(controllers);
   }
 
   private async connectDatabase(): Promise<void> {
@@ -30,6 +33,16 @@ class App {
 
   private initMongoose(): void {
     mongoose.set('runValidators', true);
+  }
+
+  private initExpressJson(): void {
+    this.app.use(express.json());
+  }
+
+  private initControllers(controllers: Controller[]): void {
+    controllers.forEach((controller) => {
+      this.app.use('/', controller.router);
+    });
   }
 
   public listen(port: number): void {
