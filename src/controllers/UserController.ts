@@ -9,6 +9,8 @@ import HttpException from '../errors/HttpException';
 import ServerErrorException from '../errors/ServerErrorException';
 import IdInvalidException from '../errors/IdInvalidException';
 import NoContentException from '../errors/NoContentException';
+import { responseCreate } from './../responses/ResponseUser';
+import { responseOk } from '../responses/ResponseUser';
 
 class UserController extends Controller {
   constructor() {
@@ -29,8 +31,9 @@ class UserController extends Controller {
     next: NextFunction
   ): Promise<void> {
     await User.find()
-      .then((users) => {
-        return res.status(200).json(users);
+      .then((users: UserInterface[]) => {
+        return res.json(responseOk(res, users));
+        // return res.status(200).json(users);
       })
       .catch((err) => {
         return res.json(new ServerErrorException(err));
@@ -92,7 +95,8 @@ class UserController extends Controller {
           //   message: `Usuário com ID: ${id} não cadastrado!`,
           // });
         }
-        return res.status(200).json(user);
+        return res.json(responseOk(res, user));
+        // return res.status(200).json(user);
       })
       .catch((err) => res.json(new ServerErrorException(err)));
     // .catch((err) => {
@@ -111,7 +115,8 @@ class UserController extends Controller {
 
     await User.create(user)
       .then((user) => {
-        return res.status(201).json(user);
+        return res.json(responseCreate(res, user));
+        // return res.status(201).json(user);
       })
       .catch((err) => res.json(new ServerErrorException(err)));
     // .catch((err) => {
@@ -136,7 +141,8 @@ class UserController extends Controller {
     await User.findByIdAndUpdate(id, req.body, { new: true })
       .then((user) => {
         if (user) {
-          return res.status(200).json(user);
+          return res.json(responseOk(res, user));
+          // return res.status(200).json(user);
         }
       })
       .catch((err) => res.json(new ServerErrorException(err)));
@@ -166,10 +172,11 @@ class UserController extends Controller {
       .then((user) => {
         if (user) {
           return res.json(
-            new HttpException(
-              200,
-              `Usuário com ID: ${id} excluído com sucesso!`
-            )
+            responseOk(res, user)
+            // new HttpException(
+            //   200,
+            //   `Usuário com ID: ${id} excluído com sucesso!`
+            // )
           );
           // .status(200)
           // .json({ message: `Usuário com ID: ${id} excluído com sucesso!` });
