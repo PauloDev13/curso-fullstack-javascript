@@ -5,6 +5,10 @@ import Controller from './Controller';
 import User from '../schemas/User';
 import { UserInterface } from '../schemas/User';
 import ValidationService from '../services/ValidationService';
+import HttpException from '../errors/HttpException';
+import ServerErrorException from '../errors/ServerErrorException';
+import IdInvalidException from '../errors/IdInvalidException';
+import NoContentException from '../errors/NoContentException';
 
 class UserController extends Controller {
   constructor() {
@@ -29,10 +33,14 @@ class UserController extends Controller {
         return res.status(200).json(users);
       })
       .catch((err) => {
-        return res
-          .status(500)
-          .json({ message: 'Erro ao buscar usuários', error: err });
+        return res.json(new ServerErrorException(err));
       });
+
+    // .catch((err) => {
+    //   return res
+    //     .status(500)
+    //     .json({ message: 'Erro ao buscar usuários', error: err });
+    // });
   }
 
   // private async findById(
@@ -68,26 +76,30 @@ class UserController extends Controller {
     // ValidationService.validateId(id, res);
 
     if (ValidationService.validateId(id)) {
-      res.status(400).json({
-        message: `O ID: ${id} é invalido!`,
-      });
+      res.json(new IdInvalidException());
+      // res.status(400).json({
+      //   message: `O ID: ${id} é invalido!`,
+      // });
     }
 
     await User.findById(id)
       .then((user) => {
         if (!user) {
-          return res.status(400).json({
-            message: `Usuário com ID: ${id} não cadastrado!`,
-          });
+          return res.json(
+            new HttpException(404, `Usuário com ID: ${id} não cadastrado!`)
+          );
+          // return res.status(400).json({
+          //   message: `Usuário com ID: ${id} não cadastrado!`,
+          // });
         }
         return res.status(200).json(user);
       })
-      .catch((err) => {
-        return res.status(500).json({
-          message: `Erro ao buscar usuário com ID: ${id}`,
-          error: err,
-        });
-      });
+      .catch((err) => res.json(new ServerErrorException(err)));
+    // .catch((err) => {
+    //   return res.status(500).json({
+    //     message: `Erro ao buscar usuário com ID: ${id}`,
+    //     error: err,
+    //   });
   }
 
   private async create(
@@ -101,9 +113,10 @@ class UserController extends Controller {
       .then((user) => {
         return res.status(201).json(user);
       })
-      .catch((err) => {
-        return res.status(400).json(err);
-      });
+      .catch((err) => res.json(new ServerErrorException(err)));
+    // .catch((err) => {
+    // return res.status(400).json(err);
+    // });
   }
 
   private async edit(
@@ -113,6 +126,12 @@ class UserController extends Controller {
   ): Promise<void> {
     const { id } = req.params;
     // ValidationService.validateId(id, res);
+    if (ValidationService.validateId(id)) {
+      res.json(new IdInvalidException());
+      // res.status(400).json({
+      //   message: `O ID: ${id} é invalido!`,
+      // });
+    }
 
     await User.findByIdAndUpdate(id, req.body, { new: true })
       .then((user) => {
@@ -120,12 +139,13 @@ class UserController extends Controller {
           return res.status(200).json(user);
         }
       })
-      .catch((err) => {
-        return res.status(500).json({
-          message: `Erro ao atualizar usuário com ID: ${id}`,
-          error: err,
-        });
-      });
+      .catch((err) => res.json(new ServerErrorException(err)));
+    // .catch((err) => {
+    //   return res.status(500).json({
+    //     message: `Erro ao atualizar usuário com ID: ${id}`,
+    //     error: err,
+    //   });
+    // });
   }
 
   private async delete(
@@ -135,25 +155,37 @@ class UserController extends Controller {
   ): Promise<void> {
     const { id } = req.params;
     // ValidationService.validateId(id, res);
+    if (ValidationService.validateId(id)) {
+      res.json(new IdInvalidException());
+      // res.status(400).json({
+      //   message: `O ID: ${id} é invalido!`,
+      // });
+    }
 
     await User.findByIdAndRemove(id, {})
       .then((user) => {
         if (user) {
-          return res
-            .status(200)
-            .json({ message: `Usuário com ID: ${id} excluído com sucesso!` });
+          return res.json(
+            new HttpException(
+              200,
+              `Usuário com ID: ${id} excluído com sucesso!`
+            )
+          );
+          // .status(200)
+          // .json({ message: `Usuário com ID: ${id} excluído com sucesso!` });
         } else {
-          return res
-            .status(404)
-            .json({ message: `Usuário com ID: ${id} não encontrado!` });
+          return res.json(new NoContentException());
+          // .status(404)
+          // .json({ message: `Usuário com ID: ${id} não encontrado!` });
         }
       })
-      .catch((err) => {
-        res.status(500).json({
-          message: `Erro ao excluir usuário com ID: ${id}`,
-          error: err,
-        });
-      });
+      .catch((err) => res.json(new ServerErrorException(err)));
+    // .catch((err) => {
+    //   res.status(500).json({
+    //     message: `Erro ao excluir usuário com ID: ${id}`,
+    //     error: err,
+    //   });
+    // });
   }
 }
 
