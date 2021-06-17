@@ -1,8 +1,8 @@
 import HttpException from './HttpException';
 
 class IdInvalidException extends HttpException {
-  constructor() {
-    super(400, 'ID inválido');
+  constructor(id: string) {
+    super(400, `ID: ${id} inválido!`);
   }
 }
 

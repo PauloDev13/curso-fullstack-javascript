@@ -4,9 +4,25 @@ import { Response } from 'express';
 export const responseCreate = (
   res: Response,
   body: UserInterface
-): Response => {
+): Response<UserInterface> => {
   const status = 201;
-  const message = 'Criado com sucesso!';
+  const message = 'Registro criado com sucesso!';
+  const error = false;
+
+  return res.status(status).json({
+    status,
+    message,
+    error,
+    body,
+  });
+};
+
+export const responseUpdate = (
+  res: Response,
+  body: UserInterface
+): Response<UserInterface> => {
+  const status = 200;
+  const message = 'Registro atualizado com sucesso!';
   const error = false;
 
   return res.status(status).json({
@@ -18,8 +34,8 @@ export const responseCreate = (
 };
 
 export const responseNotFound = (res: Response): Response => {
-  const status = 404;
-  const message = 'Rota não identificada!';
+  const status = 400;
+  const message = 'Recurso enexistente!';
   const error = true;
   const body = {};
 
@@ -34,9 +50,9 @@ export const responseNotFound = (res: Response): Response => {
 export const responseOk = (
   res: Response,
   body: UserInterface | UserInterface[]
-): Response => {
+): Response<UserInterface | UserInterface[]> => {
   const status = 200;
-  const message = 'Ok!';
+  const message = 'Operação concluída com sucesso!';
   const error = false;
 
   return res.status(status).json({
@@ -47,7 +63,7 @@ export const responseOk = (
   });
 };
 
-export const responseRutimeError = (
+export const responseRuntimeError = (
   res: Response,
   status: number,
   message: string

@@ -1,9 +1,13 @@
 import { Types } from 'mongoose';
 import { NextFunction, Response } from 'express';
+import IdInvalidException from '../errors/IdInvalidException';
 
 class ValidationService {
-  public validateId(id: string): boolean {
-    if (!Types.ObjectId.isValid(id)) return true;
+  public validateId(id: string, next: NextFunction): boolean {
+    if (!Types.ObjectId.isValid(id)) {
+      next(new IdInvalidException(id));
+      return true;
+    }
     return false;
   }
 

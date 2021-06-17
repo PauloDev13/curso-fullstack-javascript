@@ -1,8 +1,11 @@
 import HttpException from './HttpException';
 
 class NoContentException extends HttpException {
-  constructor() {
-    super(204, 'Registro não localizado');
+  constructor(id?: string) {
+    if (id) {
+      super(404, `Registro não localizado para o ID: ${id}`);
+    }
+    super(404, 'Não há registros cadastrados');
   }
 }
 
