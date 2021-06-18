@@ -6,8 +6,8 @@ export interface PropsInterface {
 }
 
 export enum StatusEnum {
-  OPEN = 'OPEN',
-  FINISHED = 'FINISHED',
+  OPEN = 'open',
+  FINISHED = 'finished',
 }
 
 export interface TaskInterface extends Document {

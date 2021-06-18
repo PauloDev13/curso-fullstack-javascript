@@ -1,25 +1,24 @@
 import { NextFunction, Request, Response } from 'express';
-
-import Controller from './Controller';
-import User from '../schemas/User';
-import { UserInterface } from '../schemas/User';
-import ValidationService from '../services/ValidationService';
-import ServerErrorException from '../errors/ServerErrorException';
 import NoContentException from '../errors/NoContentException';
+import ServerErrorException from '../errors/ServerErrorException';
 import {
   responseCreate,
-  responseUpdate,
   responseOk,
-} from './../responses/ResponseUser';
-import UserService from '../services/UserService';
+  responseUpdate,
+} from '../responses/ResponseUser';
+import Task from '../schemas/Task';
+import TaskService, { TaskFilterEnum } from '../services/TaskService';
+import ValidationService from '../services/ValidationService';
+import { TaskInterface } from './../schemas/Task';
+import Controller from './Controller';
 
-class UserController extends Controller {
+class TaskController extends Controller {
   constructor() {
-    super('/users');
+    super('/tasks');
   }
 
   protected initRouter(): void {
-    this.router.get(this.path, this.list);
+    this.router.get(`${this.path}/:filter/:_id`, this.list);
     this.router.get(`${this.path}/:id`, this.findById);
     this.router.post(this.path, this.create);
     this.router.put(`${this.path}/:id`, this.edit);
@@ -31,10 +30,11 @@ class UserController extends Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    await User.find()
-      .then((users: UserInterface[]) => {
-        if (users.length) {
-          return responseOk(res, users);
+    await Task.find(TaskService.getParamsList(req))
+      .populate('responsible')
+      .then((tasks: TaskInterface[]) => {
+        if (tasks.length) {
+          return responseOk(res, tasks);
         }
         next(new NoContentException());
       })
@@ -77,12 +77,13 @@ class UserController extends Controller {
       return;
     }
 
-    await User.findById(id)
-      .then((user) => {
-        if (!user) {
+    await Task.findById(id)
+      .populate('responsible')
+      .then((task) => {
+        if (!task) {
           next(new NoContentException(id));
         }
-        return responseOk(res, user);
+        return responseOk(res, task);
       })
       .catch((err) => next(new ServerErrorException(err)));
   }
@@ -92,11 +93,14 @@ class UserController extends Controller {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    const user: UserInterface = req.body;
+    const task: TaskInterface = req.body;
 
-    await User.create(user)
-      .then((user) => {
-        return responseCreate(res, user);
+    TaskService.checkStatusFinished(task);
+
+    await Task.create(task)
+      .then(async (task) => {
+        const taskReturn = await Task.findById(task.id).populate('responsible');
+        return responseCreate(res, taskReturn);
       })
       .catch((err) => next(new ServerErrorException(err)));
   }
@@ -112,11 +116,17 @@ class UserController extends Controller {
       return;
     }
 
-    await User.findByIdAndUpdate(id, req.body, { new: true })
-      .then((user) => {
-        if (user) {
-          return responseUpdate(res, user);
+    await Task.findByIdAndUpdate(id, req.body, { new: true })
+      .then(async (task) => {
+        if (task) {
+          const taskReturn = await Task.findById(task.id).populate(
+            'responsible'
+          );
+
+          TaskService.checkStatusFinished(taskReturn);
+          return responseUpdate(res, taskReturn);
         }
+
         next(new NoContentException(id));
       })
       .catch((err) => next(new ServerErrorException(err)));
@@ -133,12 +143,10 @@ class UserController extends Controller {
       return;
     }
 
-    if (await UserService.validadeExistAnyTasks(id, next)) return;
-
-    await User.findByIdAndRemove(id, {})
-      .then((user) => {
-        if (user) {
-          return responseOk(res, user);
+    await Task.findByIdAndRemove(id, {})
+      .then((task) => {
+        if (task) {
+          return responseOk(res, task);
         }
         next(new NoContentException(id));
       })
@@ -146,4 +154,4 @@ class UserController extends Controller {
   }
 }
 
-export default UserController;
+export default TaskController;
